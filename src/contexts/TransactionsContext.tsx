@@ -1,5 +1,6 @@
 import { ReactNode, createContext } from "react";
 import { useEffect, useState } from "react";
+import { api } from "../lib/axios";
 
 /**
  * qualquer componente dentro da árvore de componentes envolvida pelo TransactionProvider 
@@ -35,16 +36,13 @@ export function TransactionProvider({ children }: TransactionProviderProps) {
 
   //useEffect() não suporta funções assíncronas
   async function fetchTransactions(query?: string) {
-    const url = new URL('http://localhost:3000/transactions');
+    const response = await api.get('/transactions', {
+      params: {
+        q: query,
+      }
+    })
 
-    if (query) {
-      url.searchParams.append('q', query)
-    }
-
-    const res = await fetch(url);
-    const data = await res.json();
-
-    setTransactions(data);
+    setTransactions(response.data);
   }
 
   useEffect(() => {
