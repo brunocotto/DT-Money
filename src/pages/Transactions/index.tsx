@@ -9,7 +9,7 @@ import { useContextSelector } from "use-context-selector";
 export function Transactions() {
   const transactions = useContextSelector(TransactionsContext, (context) => {
     return context.transactions;
-  });
+});
 
   return (
     <div>
@@ -32,7 +32,7 @@ export function Transactions() {
                     </PriceHighLight>
                   </td>
                   <td>{transaction.category}</td>
-                  <td>{dateFormatter.format(new Date(transaction.createdAt))}</td>
+                  <td>{dateFormatter.format(new Date(transaction.created_at))}</td>
               </tr>
               )
             })}

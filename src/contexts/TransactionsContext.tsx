@@ -1,5 +1,7 @@
 import { ReactNode } from "react";
-import { useEffect, useState } from "react";
+// useCallback => Evita com que uma função seja recriada em memória
+// se nenhuma informação tenha mudado
+import { useEffect, useState, useCallback } from "react";
 import { api } from "../lib/axios";
 import { createContext } from "use-context-selector";
 
@@ -9,12 +11,12 @@ import { createContext } from "use-context-selector";
 **/
 
 interface Transaction {
-  id: number;
+  id: string;
   description: string;
   type: 'income' | 'outcome';
   price: number;
   category: string;
-  createdAt: string;
+  created_at: string;
 }
 
 interface CreateTransactionInput {
@@ -44,34 +46,45 @@ export function TransactionProvider({ children }: TransactionProviderProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
 
   //useEffect() não suporta funções assíncronas
-  async function fetchTransactions(query?: string) {
-    const response = await api.get('/transactions', {
-      params: {
-        _sort: 'createdAt',
-        _order: 'desc',
-        q: query,
-      }
-    })
+  const fetchTransactions = useCallback(
+    async (query?: string) => {
+      const response = await api.get('/transactions/history', {
+        params: {
+          _sort: 'created_at',
+          _order: 'desc',
+          q: query,
+        },
+      })
+      setTransactions(response.data.transactions);
+    },
+    [],
+  )
 
-    setTransactions(response.data);
-  }
+  const createTransaction = useCallback(
+    async (data: CreateTransactionInput) => {
+      const { description, category, price, type } = data;
 
-  async function createTransaction(data: CreateTransactionInput) {
-    const { description, category, price, type } = data;
+      const res = await api.post('/transactions', {
+        description,
+        category,
+        price,
+        type,
+      })
 
-    const res = await api.post('/transactions', {
-      description,
-      category,
-      price,
-      type,
-      createdAt: new Date(),
-    })
-
-    setTransactions(state => [res.data, ...state]);
-  }
+      setTransactions(state => [res.data.transaction, ...state]);
+    },
+    // array de dependênicias
+    [],
+  )
 
   useEffect(() => {
     fetchTransactions()
+  }, [fetchTransactions])
+
+  useEffect(() => {
+    console.log(transactions.map(transaction => {
+      return transaction
+    }))
   }, [])
 
   return (
